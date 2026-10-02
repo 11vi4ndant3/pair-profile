@@ -75,7 +75,27 @@ button:focus-visible,[contenteditable]:focus-visible{outline:2px solid var(--acc
 .photo-ctrl button:hover{background:rgba(20,20,22,.9)}
 
 /* 이름 / 키 / 나이 */
-.name-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin-top:16px}
+/* 출처 표기 */
+.credit{margin-top:7px;font-size:11px;line-height:1.5;color:#9a9a9f;font-family:var(--sans)}
+.card.serif .credit{font-family:var(--serif)}
+.credit-box{display:flex;align-items:baseline;gap:3px;max-width:100%}
+.mirror .credit-box{justify-content:flex-end}
+.c-mark{flex:none}
+.c-text{min-width:3em;overflow-wrap:anywhere}
+.c-del{flex:none;border:0;background:transparent;color:#b4b4b0;cursor:pointer;font-size:13px;line-height:1;padding:0 2px;opacity:0;transition:opacity .15s}
+.credit:hover .c-del,.c-del:focus-visible{opacity:1}
+@media (hover:none){.c-del{opacity:1}}
+.c-del:hover{color:#c2402f}
+.c-add{display:none;border:0;background:transparent;color:#b4b4b0;font-size:11px;cursor:pointer;padding:0}
+.c-add:hover{color:var(--ink)}
+.mirror .credit{text-align:right}
+.credit.off .credit-box{display:none}
+.credit.off .c-add{display:inline-block}
+.head-wrap{display:flex;flex-direction:column;align-items:flex-start;width:128px;flex:none}
+.mirror .head-wrap{align-items:flex-end}
+.head-wrap .credit{width:100%}
+.exporting .credit.off,.exporting .credit.blank{display:none}
+.name-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin-top:10px}
 .mirror .name-row{justify-content:flex-end}
 .name{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.2;min-width:1em}
 .meta{font-size:15px;color:#6f6f74;display:inline-flex;align-items:baseline;gap:6px}
@@ -218,6 +238,10 @@ button:focus-visible,[contenteditable]:focus-visible{outline:2px solid var(--acc
         </div>
         <input type="file" accept="image/*" hidden>
       </div>
+      <div class="credit">
+        <div class="credit-box"><span class="c-mark">©</span><span class="c-text one" contenteditable="true" data-ph="작가명 / 출처"></span><button type="button" class="c-del" data-html2canvas-ignore title="출처 칸 삭제">×</button></div>
+        <button type="button" class="c-add" data-html2canvas-ignore>+ 출처 표기 추가</button>
+      </div>
       <div class="name-row">
         <span class="name one" contenteditable="true" data-ph="이름"></span>
         <span class="meta">
@@ -230,6 +254,7 @@ button:focus-visible,[contenteditable]:focus-visible{outline:2px solid var(--acc
 
     <div class="info-col">
       <div class="head-row">
+        <div class="head-wrap">
         <div class="photo head" data-photo>
           <img alt="" draggable="false">
           <div class="ph">
@@ -241,6 +266,11 @@ button:focus-visible,[contenteditable]:focus-visible{outline:2px solid var(--acc
             <button type="button" data-act="reset" title="위치 · 크기 초기화"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
           </div>
           <input type="file" accept="image/*" hidden>
+        </div>
+        <div class="credit">
+          <div class="credit-box"><span class="c-mark">©</span><span class="c-text one" contenteditable="true" data-ph="작가명 / 출처"></span><button type="button" class="c-del" data-html2canvas-ignore title="출처 칸 삭제">×</button></div>
+          <button type="button" class="c-add" data-html2canvas-ignore>+ 출처 표기 추가</button>
+        </div>
         </div>
         <div class="sw-groups">
           <div class="sw-group" data-group="hair">
@@ -273,7 +303,7 @@ button:focus-visible,[contenteditable]:focus-visible{outline:2px solid var(--acc
       <div class="hdivider"></div>
       <div class="tbox">
         <div class="t-title one" contenteditable="true" data-ph="제목">기타 사항</div>
-        <div class="t-body rich" contenteditable="true" data-ph="성격, 관계, 설정 등을 적어 주세요."></div>
+        <div class="t-body rich" contenteditable="true" data-ph="추가 사항을 자유롭게 적어 주세요."></div>
       </div>
     </div>
   </section>
@@ -418,6 +448,12 @@ function setupPhoto(el){
   }, { passive:false });
 }
 $$('[data-photo]').forEach(setupPhoto);
+
+/* ---------- 출처 표기 ---------- */
+$$('.credit', card).forEach(c => {
+  $('.c-del', c).addEventListener('click', () => c.classList.add('off'));
+  $('.c-add', c).addEventListener('click', () => { c.classList.remove('off'); $('.c-text', c).focus(); });
+});
 
 /* ---------- 색 변환 ---------- */
 function hsvToHex(h, s, v){
@@ -692,6 +728,7 @@ $('#savePng').addEventListener('click', async () => {
   try {
     await document.fonts.ready;
     window.scrollTo(0, 0); stage.scrollLeft = 0;
+    $$('.credit', card).forEach(c => c.classList.toggle('blank', !$('.c-text', c).textContent.trim()));
     card.classList.add('exporting');
     const canvas = await html2canvas(card, { scale:2, backgroundColor:'#ffffff', logging:false, useCORS:true });
     const names = $$('.name', card).map(n => n.textContent.trim()).filter(Boolean);
